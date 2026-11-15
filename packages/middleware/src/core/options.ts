@@ -42,6 +42,7 @@ export interface ResolvedTranslatorOptions {
    */
   readonly perValueSourceLanguage: boolean;
   readonly undetectedLanguage: UndetectedLanguageStrategy;
+  readonly protectPlaceholders: boolean;
   /** Languages a resolved or detected source may take: supported + source. */
   readonly sourceLanguages: string[];
   readonly include: FieldMatcher;
@@ -79,6 +80,7 @@ export function resolveTranslatorOptions(options: TranslatorOptions): ResolvedTr
     perValueSourceLanguage: Boolean(options.sourceLanguageResolver ?? detectSourceLanguage),
     sourceLanguages: [...new Set([...supportedLanguages, sourceLanguage])],
     undetectedLanguage: options.undetectedLanguage === 'skip' ? 'skip' : 'source',
+    protectPlaceholders: options.protectPlaceholders !== false,
     include: createFieldMatcher(options.fields),
     exclude: createFieldMatcher(options.excludeFields ?? []),
     cache,

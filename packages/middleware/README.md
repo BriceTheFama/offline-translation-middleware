@@ -240,6 +240,26 @@ The last word is yours:
 shouldTranslateValue: (text, path) => text.length > 3,
 ```
 
+## Placeholders
+
+Interpolation placeholders never reach the engine. A neural model reads
+`{count}` as a word — `You have {count} new messages` would come back as
+`Vous avez {compte} nouveaux messages`, and break your front end. Each
+placeholder is swapped for a marker the model copies through, then put back:
+
+```text
+You have {count} new messages  ->  Vous avez {count} de nouveaux messages
+Hello {{name}}, order #{id}    ->  Bonjour {{name}}, commande #{id}
+Only %d left in stock          ->  Seulement %d laissé en stock
+```
+
+Covered: `{name}`, `{{name}}`, `${name}`, `{0}`, whole ICU expressions
+(`{count, plural, one {# item} other {# items}}`) and printf (`%s`, `%d`,
+`%1$s`, `%(name)s`). A translation that loses or duplicates a placeholder is
+discarded: the original text is served, `stats.errors` counts it and
+`onTranslationError` hears about it. A text made only of placeholders is not
+sent at all. `protectPlaceholders: false` turns this off.
+
 ## Cache
 
 On by default: an in-process LRU with a TTL, keyed by
@@ -408,6 +428,7 @@ interface TranslationStats {
 | `sourceLanguageResolver`      | `(text, { path, parent }) => string \| undefined` | —                                   | Declares a text's language, ahead of detection.                  |
 | `detectSourceLanguage`        | `boolean \| (text) => string \| undefined`        | `true`                              | Per-text English/French detection, or your own detector.         |
 | `undetectedLanguage`          | `'source' \| 'skip'`                              | `'source'`                          | A text of unknown language: assume `sourceLanguage`, or skip it. |
+| `protectPlaceholders`         | `boolean`                                         | `true`                              | Keep `{name}`, `{{name}}`, `%s`... away from the engine.         |
 | `supportedLanguages`          | `string[]`                                        | `[sourceLanguage, defaultLanguage]` | Allow-list of targets.                                           |
 | `excludeFields`               | `string[]`                                        | `[]`                                | Always wins over `fields`.                                       |
 | `cache`                       | `CacheOptions \| false`                           | `{ ttl: 3600, maxEntries: 10000 }`  | Translation cache.                                               |
@@ -477,9 +498,10 @@ Things that keep it fast:
 - Source-language detection knows English and French only. Other languages
   need `sourceLanguageResolver` or your own `detectSourceLanguage`.
 - Translation quality is entirely the engine's business.
-- Placeholders such as `{count}` or `%s` inside a translated string may be
-  reordered or mangled by a neural engine. Keep interpolation out of translated
-  fields, or handle it in your engine.
+- Placeholders are protected, not translated: inside an ICU `plural` or
+  `select` expression, the branch texts (`# item`, `# items`) stay as written.
+  A placeholder in the middle of a sentence can still make the model choose an
+  awkward word order around it.
 
 ## Roadmap
 

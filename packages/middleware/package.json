@@ -1,6 +1,6 @@
 {
   "name": "@offline-translator/middleware",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Express middleware that automatically translates the text fields of your JSON API responses before they reach the frontend.",
   "keywords": [
     "translation",

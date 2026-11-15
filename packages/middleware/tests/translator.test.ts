@@ -255,6 +255,65 @@ describe('ResponseTranslator', () => {
     expect(await translator.translateText('Hello', 'en')).toBe('Hello');
   });
 
+  it('keeps placeholders out of the engine and puts them back', async () => {
+    const seen: string[] = [];
+    const engine: TranslationEngine = {
+      translate: async (text) => {
+        seen.push(text);
+        // What OPUS-MT does to a named placeholder, and to a marker.
+        return text.replace('{count}', '{compte}').replace('You have', 'Vous avez');
+      },
+    };
+    const { translator } = build({}, engine as FakeTranslationEngine);
+    const result = await translator.translateResponse(
+      { message: 'You have {count} new messages' },
+      'fr',
+    );
+
+    expect(seen).toEqual(['You have {0} new messages']);
+    expect(result).toEqual({ message: 'Vous avez {count} new messages' });
+  });
+
+  it('keeps the original text when the engine loses a placeholder', async () => {
+    const onTranslationError = vi.fn();
+    const engine: TranslationEngine = { translate: async () => 'Vous avez des messages' };
+    const { translator } = build({ onTranslationError }, engine as FakeTranslationEngine);
+    const result = await translator.translateResponseWithStats(
+      { message: 'You have {count} new messages' },
+      'fr',
+    );
+
+    expect(result.value).toEqual({ message: 'You have {count} new messages' });
+    expect(result.stats.errors).toBe(1);
+    expect(onTranslationError.mock.calls[0]?.[1]).toMatchObject({
+      text: 'You have {count} new messages',
+    });
+  });
+
+  it('does not call the engine for a text made only of placeholders', async () => {
+    const { translator, engine } = build();
+    expect(await translator.translateResponse({ name: '{firstName} {lastName}' }, 'fr')).toEqual({
+      name: '{firstName} {lastName}',
+    });
+    expect(engine.callCount).toBe(0);
+  });
+
+  it('sends placeholders as they are with protectPlaceholders: false', async () => {
+    const seen: string[] = [];
+    const engine: TranslationEngine = { translate: async (text) => (seen.push(text), text) };
+    const { translator } = build({ protectPlaceholders: false }, engine as FakeTranslationEngine);
+    await translator.translateResponse({ message: 'You have {count} new messages' }, 'fr');
+    expect(seen).toEqual(['You have {count} new messages']);
+  });
+
+  it('reports a failing engine with the original text, not the masked one', async () => {
+    const onTranslationError = vi.fn();
+    const engine = new FakeTranslationEngine({ failOn: () => true });
+    const { translator } = build({ onTranslationError }, engine);
+    await translator.translateResponse({ message: 'Hello {name}' }, 'fr');
+    expect(onTranslationError.mock.calls[0]?.[1]).toMatchObject({ text: 'Hello {name}' });
+  });
+
   it('defaults the target language to defaultLanguage', async () => {
     const { translator } = build();
     expect(await translator.translateResponse({ name: 'Hello' })).toEqual({ name: 'Bonjour' });

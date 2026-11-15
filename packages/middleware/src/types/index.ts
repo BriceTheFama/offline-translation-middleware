@@ -160,6 +160,14 @@ export interface TranslatorOptions {
    */
   undetectedLanguage?: UndetectedLanguageStrategy;
 
+  /**
+   * Keeps interpolation placeholders — `{name}`, `{{name}}`, `\${name}`, ICU
+   * expressions, `%s` — out of the engine's reach, so `{count}` never comes back
+   * as `{compte}`. A translation that loses one keeps the original text and
+   * counts as an error. Default: `true`.
+   */
+  protectPlaceholders?: boolean;
+
   /** Language used when the request asks for nothing usable. */
   defaultLanguage: string;
 

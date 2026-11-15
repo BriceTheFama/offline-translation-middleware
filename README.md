@@ -83,12 +83,12 @@ is, rather than risk it on the wrong model. Details in the
 
 ## Packages
 
-| Package                                                 | npm                                                                   | Description                                                          |
-| ------------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| [`@offline-translator/middleware`](packages/middleware) | [0.3.0](https://www.npmjs.com/package/@offline-translator/middleware) | The pipeline, and the Express middleware. Zero runtime dependencies. |
-| [`@offline-translator/local`](packages/local)           | [0.2.0](https://www.npmjs.com/package/@offline-translator/local)      | Offline engine: OPUS-MT on ONNX Runtime, `en > fr` and `fr > en`.    |
-| [`@offline-translator/fastify`](packages/fastify)       | not published yet                                                     | Fastify 4/5 plugin.                                                  |
-| [`@offline-translator/nestjs`](packages/nestjs)         | not published yet                                                     | NestJS 10/11 module, both platforms.                                 |
+| Package                                                 | npm                                                                    | Description                                                          |
+| ------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [`@offline-translator/middleware`](packages/middleware) | [on npm](https://www.npmjs.com/package/@offline-translator/middleware) | The pipeline, and the Express middleware. Zero runtime dependencies. |
+| [`@offline-translator/local`](packages/local)           | [on npm](https://www.npmjs.com/package/@offline-translator/local)      | Offline engine: OPUS-MT on ONNX Runtime, `en > fr` and `fr > en`.    |
+| [`@offline-translator/fastify`](packages/fastify)       | not published yet                                                      | Fastify 4/5 plugin.                                                  |
+| [`@offline-translator/nestjs`](packages/nestjs)         | not published yet                                                      | NestJS 10/11 module, both platforms.                                 |
 
 The Fastify and NestJS adapters are complete and tested in this repository;
 they take the same options as the Express middleware and behave identically,

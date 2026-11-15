@@ -8,6 +8,7 @@ import type {
   TranslatorOptions,
 } from '../types/index.js';
 import { chunk, mapWithConcurrency } from '../utils/concurrency.js';
+import { maskPlaceholders, unmaskPlaceholders, type MaskedText } from '../utils/placeholders.js';
 import { toError } from './errors.js';
 import {
   applyTranslations,
@@ -182,13 +183,46 @@ export class ResponseTranslator implements Translator {
 
     if (missing.length === 0) return translations;
 
-    stats.engineCalls += missing.length;
-    const translated = await this.callEngine(missing, source, target, stats);
+    // The engine sees `{0}` where the text says `{count}`; a text that is
+    // nothing but placeholders has no words for it to work on.
+    const toEngine: string[] = [];
+    const maskedForEngine: MaskedText[] = [];
+    for (const text of missing) {
+      const masked = this.config.protectPlaceholders
+        ? maskPlaceholders(text)
+        : { text, placeholders: [] };
+      if (!HAS_LETTER.test(masked.text)) continue;
+      toEngine.push(text);
+      maskedForEngine.push(masked);
+    }
+    if (toEngine.length === 0) return translations;
 
-    for (let index = 0; index < missing.length; index++) {
-      const text = missing[index] as string;
-      const value = translated[index];
-      if (typeof value !== 'string' || value.length === 0) continue;
+    stats.engineCalls += toEngine.length;
+    const translated = await this.callEngine(
+      maskedForEngine.map((entry) => entry.text),
+      toEngine,
+      source,
+      target,
+      stats,
+    );
+
+    for (let index = 0; index < toEngine.length; index++) {
+      const text = toEngine[index] as string;
+      const raw = translated[index];
+      if (typeof raw !== 'string' || raw.length === 0) continue;
+
+      const value = unmaskPlaceholders(raw, (maskedForEngine[index] as MaskedText).placeholders);
+      if (value === undefined) {
+        stats.errors++;
+        this.report(
+          new Error(`placeholders lost in translation: ${JSON.stringify(raw)}`),
+          text,
+          source,
+          target,
+        );
+        continue;
+      }
+
       translations.set(text, value);
       if (this.config.cacheEnabled) {
         this.config.cache.set(buildCacheKey(source, target, text), value);
@@ -204,22 +238,28 @@ export class ResponseTranslator implements Translator {
    */
   private async callEngine(
     texts: readonly string[],
+    /** What the texts were before masking, for error reports. */
+    originals: readonly string[],
     source: string,
     target: string,
     stats: TranslationStats,
   ): Promise<(string | undefined)[]> {
     const { engine, concurrency, batchSize } = this.config;
+    const one = (index: number): Promise<string | undefined> =>
+      this.translateOne(texts[index] as string, originals[index] as string, source, target, stats);
 
     if (!supportsBatch(engine)) {
-      return mapWithConcurrency(texts, concurrency, (text) =>
-        this.translateOne(text, source, target, stats),
-      );
+      return mapWithConcurrency(texts, concurrency, (_text, index) => one(index));
     }
 
-    const batches = chunk(texts, batchSize);
-    const results = await mapWithConcurrency(batches, concurrency, async (batch) => {
+    const batches = chunk(
+      texts.map((_text, index) => index),
+      batchSize,
+    );
+    const results = await mapWithConcurrency(batches, concurrency, async (indices) => {
+      const batch = indices.map((index) => texts[index] as string);
       try {
-        const output = await engine.translateBatch(batch.slice(), source, target);
+        const output = await engine.translateBatch(batch, source, target);
         if (!Array.isArray(output) || output.length !== batch.length) {
           throw new Error(
             `translateBatch returned ${Array.isArray(output) ? output.length : 'a non-array'} results for ${batch.length} inputs`,
@@ -232,9 +272,7 @@ export class ResponseTranslator implements Translator {
         // so a single bad string cannot sink its neighbours. The batch error is
         // not reported: the retry produces the accurate ones.
         this.config.logger.debug(`batch failed, retrying individually: ${toError(error).message}`);
-        return mapWithConcurrency(batch, 1, (text) =>
-          this.translateOne(text, source, target, stats),
-        );
+        return mapWithConcurrency(indices, 1, one);
       }
     });
 
@@ -243,6 +281,7 @@ export class ResponseTranslator implements Translator {
 
   private async translateOne(
     text: string,
+    original: string,
     source: string,
     target: string,
     stats: TranslationStats,
@@ -252,7 +291,7 @@ export class ResponseTranslator implements Translator {
     } catch (error) {
       if (this.config.failureMode === 'throw') throw error;
       stats.errors++;
-      this.report(toError(error), text, source, target);
+      this.report(toError(error), original, source, target);
       return undefined;
     }
   }
@@ -281,6 +320,8 @@ export class ResponseTranslator implements Translator {
 export function createTranslator(options: TranslatorOptions): Translator {
   return new ResponseTranslator(options);
 }
+
+const HAS_LETTER = /\p{L}/u;
 
 function emptyStats(sourceLanguage: string, targetLanguage: string): TranslationStats {
   return {
