@@ -1,0 +1,66 @@
+{
+  "name": "@offline-translator/middleware",
+  "version": "0.3.0",
+  "description": "Express middleware that automatically translates the text fields of your JSON API responses before they reach the frontend.",
+  "keywords": [
+    "translation",
+    "i18n",
+    "middleware",
+    "express",
+    "json",
+    "offline",
+    "localization",
+    "accept-language"
+  ],
+  "license": "MIT",
+  "author": "Brice Kouevidjin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BriceTheFama/offline-translation-middleware.git",
+    "directory": "packages/middleware"
+  },
+  "homepage": "https://github.com/BriceTheFama/offline-translation-middleware/tree/main/packages/middleware#readme",
+  "bugs": "https://github.com/BriceTheFama/offline-translation-middleware/issues",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "benchmark": "tsx benchmark/benchmark.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/supertest": "^6.0.2",
+    "express": "^5.2.1",
+    "supertest": "^7.0.0",
+    "tsx": "^4.19.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

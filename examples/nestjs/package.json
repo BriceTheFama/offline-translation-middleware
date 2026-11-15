@@ -1,0 +1,22 @@
+{
+  "name": "@offline-translator/example-nestjs",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Runnable NestJS API showing @offline-translator/nestjs in action.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "demo": "tsx src/demo.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "@offline-translator/nestjs": "0.3.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
+  }
+}

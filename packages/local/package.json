@@ -1,0 +1,68 @@
+{
+  "name": "@offline-translator/local",
+  "version": "0.2.0",
+  "description": "Local, offline translation engine for @offline-translator/middleware, running OPUS-MT models on ONNX Runtime through Transformers.js.",
+  "keywords": [
+    "translation",
+    "offline",
+    "onnx",
+    "transformers",
+    "opus-mt",
+    "marian",
+    "local-model"
+  ],
+  "license": "MIT",
+  "author": "Brice Kouevidjin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BriceTheFama/offline-translation-middleware.git",
+    "directory": "packages/local"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "smoke": "tsx scripts/smoke.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "@huggingface/transformers": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@huggingface/transformers": {
+      "optional": false
+    }
+  },
+  "devDependencies": {
+    "@offline-translator/middleware": "^0.3.0",
+    "tsx": "^4.19.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/BriceTheFama/offline-translation-middleware/tree/main/packages/local#readme",
+  "bugs": "https://github.com/BriceTheFama/offline-translation-middleware/issues"
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@offline-translator/example-express",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Runnable Express API showing @offline-translator/middleware in action.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "demo": "tsx src/demo.ts"
+  },
+  "dependencies": {
+    "@offline-translator/middleware": "0.3.0",
+    "express": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "tsx": "^4.19.0"
+  }
+}
